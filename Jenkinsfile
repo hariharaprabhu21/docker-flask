@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "hariharaprabhu/myflask"
-        IMAGE_TAG  = "v1"
-    }
+    IMAGE_NAME = "hariharaprabhu/myflask"
+    IMAGE_TAG  = "${BUILD_NUMBER}"
+}
 
     stages {
 
