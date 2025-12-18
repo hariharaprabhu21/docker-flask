@@ -2,21 +2,22 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "hariharaprabhu21/myflask"
-        IMAGE_TAG  = "${BUILD_NUMBER}"
+        IMAGE_NAME = "hariharaprabhu21/prodflask"
+        IMAGE_TAG  = "v1"
     }
 
     stages {
 
-        stage('Verify Docker') {
+        stage('Checkout Code') {
             steps {
-                bat 'docker --version'
+                git branch: 'main',
+                    url: 'https://github.com/hariharaprabhu21/docker-flask.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t %IMAGE_NAME%:%IMAGE_TAG% .'
+                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
             }
         }
 
@@ -27,9 +28,9 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    bat '''
-                        docker login -u %DOCKER_USER% -p %DOCKER_PASS%
-                        docker push %IMAGE_NAME%:%IMAGE_TAG%
+                    sh '''
+                      echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                      docker push $IMAGE_NAME:$IMAGE_TAG
                     '''
                 }
             }
