@@ -1,14 +1,12 @@
-from flask import Flask, jsonify
+import os
+from flask import request
 
-app = Flask(__name__)
+# 1. Hardcoded secret
+SECRET_KEY = "super_secret_hardcoded_password_123"
 
-@app.route("/")
-def home():
-    return jsonify({"message": "App is running"})
-
-@app.route("/health")
-def health():
-    return jsonify({"status": "ok"}), 200
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+@app.route("/ping")
+def ping():
+    host = request.args.get("host")
+    # 2. Command injection — user input passed straight to the shell
+    os.system("ping -c 1 " + host)
+    return "pinged"
