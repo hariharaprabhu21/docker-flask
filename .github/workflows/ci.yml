@@ -1,14 +1,24 @@
 name: CI
 on:
-  push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch:
-
+    push:
+        branches: [main]
+    pull_request:
+    workflow_dispatch:
+    
 jobs:
-  hello:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - run: ls -la
-      - run: echo "Run by ${{ github.actor }}"
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-python@v6
+              with:
+                python-version: "3.12"
+            - run: pip install pytest
+            - run: pytest
+
+    build:
+        needs: test
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - run: docker build -t docker-flask:${{ github.sha }} .
