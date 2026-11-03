@@ -12,3 +12,4 @@ jobs:
       - uses: actions/checkout@v7
       - run: ls -la
       - run: echo "Run by ${{ github.actor }}"
+      - run: exit 1
