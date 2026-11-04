@@ -25,7 +25,7 @@ jobs:
             DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
             DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         steps:
-            - uses: actions/checkout@v7
-            - run: echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin
-            - run: docker build -t "$DOCKER_USER/docker-flask:${{ github.sha }}" .
-            - run: docker push "$DOCKER_USER/docker-flask:${{ github.sha }}"
+        - uses: actions/checkout@v7
+        - run: echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin
+        - run: docker build -t "$DOCKER_USER/docker-flask:${{ github.sha }}" .
+        - run: docker push "$DOCKER_USER/docker-flask:${{ github.sha }}"
