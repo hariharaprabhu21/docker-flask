@@ -8,7 +8,10 @@ for f in ["Dockerfile", "requirements.txt", "app.py"]:
     if not os.path.exists(f):
         errors.append(f"Missing File: {f}")
 
-result = subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], check_output=True, output=True)
+result = subprocess.run(
+    [sys.executable, "-m", "pip", "install", "--dry-run", "-r", "requirements.txt"],
+    capture_output=True, text=True,
+)
 
 if result.returcode != 0:
     errors.append("Dependency conflict in requirements.py")
