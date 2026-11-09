@@ -1,46 +1,44 @@
 name: CI
 on:
-    push:
-        branches: [main]
-    pull_request:
-    workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-    validate:
+  validate:
     runs-on: ubuntu-latest
     env:
-        CHECK_SECRETS: ${{ github.event_name == 'push' }}
-        DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
-        DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+      CHECK_SECRETS: ${{ github.event_name == 'push' }}
+      DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
-    - uses: actions/checkout@v7
-    - uses: actions/setup-python@v6
-      with:
-        python-version: "3.12"
-    - run: python scripts/pre_validate.pytest
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python scripts/pre_validate.py
 
+  test:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install pytest
+      - run: pytest
 
-    test:
-        needs: validate
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v7
-            - uses: actions/setup-python@v6
-              with:
-                python-version: "3.12"
-            - run: pip install pytest
-            - run: pytest
-
-
-    build:
-        needs: test
-        if: github.event_name == 'push'
-        runs-on: ubuntu-latest
-        env:
-            DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
-            DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-        steps:
-        - uses: actions/checkout@v7
-        - run: echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin
-        - run: docker build -t "$DOCKER_USER/docker-flask:${{ github.sha }}" .
-        - run: docker push "$DOCKER_USER/docker-flask:${{ github.sha }}"
+  build:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - run: echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin
+      - run: docker build -t "$DOCKER_USER/docker-flask:${{ github.sha }}" .
+      - run: docker push "$DOCKER_USER/docker-flask:${{ github.sha }}"
