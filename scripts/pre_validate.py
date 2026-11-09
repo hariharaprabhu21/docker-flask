@@ -13,7 +13,7 @@ result = subprocess.run(
     capture_output=True, text=True,
 )
 
-if result.returcode != 0:
+if result.returncode != 0:
     errors.append("Dependency conflict in requirements.py")
 
 if os.getenv("CHECK_SECRETS") == "true":
