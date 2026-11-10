@@ -20,7 +20,7 @@ jobs:
       - run: python scripts/pre_validate.py
       - name: Block xcopy
         run: |
-          if grep -rnil "xcopy" --extra-dir=.git --extra-dir=.github .; then
+          if grep -rniL "xcopy" --exclude-dir=.git --exclude-dir=.github .; then
             echo "ERROR: xcopy is not allowed. Use robocopy instead"
             exit 1
           fi
