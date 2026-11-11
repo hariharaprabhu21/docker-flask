@@ -20,11 +20,12 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+          cache: pip
       - run: python scripts/pre_validate.py
       - name: Block xcopy
         run: |
-          if grep -rniL "xcopy" --exclude-dir=.git --exclude-dir=.github .; then
-            echo "ERROR: xcopy is not allowed. Use robocopy instead"
+          if grep -rniI "xcopy" --exclude-dir=.git --exclude-dir=.github .; then
+            echo "ERROR: xcopy is not allowed. Use robocopy instead."
             exit 1
           fi
 
@@ -36,6 +37,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+          cache: pip
       - run: pip install pytest
       - run: pytest
 
@@ -44,14 +46,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - run: docker build -t docker-flask:scan .
-      - name: scan image with trivy
+      - uses: docker/setup-buildx-action@v4
+      - name: Build image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: docker-flask:scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: docker-flask:scan
           severity: CRITICAL,HIGH
           ignore-unfixed: true
-          exit-code: "1" 
+          exit-code: "1"
 
   build:
     needs: scan
@@ -62,6 +72,12 @@ jobs:
       DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
       - run: echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin
-      - run: docker build -t "$DOCKER_USER/docker-flask:${{ github.sha }}" .
-      - run: docker push "$DOCKER_USER/docker-flask:${{ github.sha }}"
+      - name: Build and push image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: ${{ env.DOCKER_USER }}/docker-flask:${{ github.sha }}
+          cache-from: type=gha
