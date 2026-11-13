@@ -123,3 +123,21 @@ jobs:
           push: true
           tags: ${{ env.DOCKER_USER }}/docker-flask:${{ github.sha }}
           cache-from: type=gha
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: production
+    env:
+      DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    steps:
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - run: echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin
+      - name: Promote image to latest
+        run: |
+          docker buildx imagetools create \
+            -t "$DOCKER_USER/docker-flask:latest" \
+            "$DOCKER_USER/docker-flask:${{ github.sha }}"
